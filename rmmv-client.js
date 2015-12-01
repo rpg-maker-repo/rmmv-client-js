@@ -7,7 +7,7 @@ RMMV.Plugin.Web = {};
 RMMV.User = {};
 RMMV.User.Web = {};
 RMMV.Web = {};
-RMMV.Web.baseUrl = "http://localhost:8080/rmmv-api";
+RMMV.Web.baseUrl = "/rmmv-api";
 RMMV.Web.authString = "";
 
 // Plugin Base
@@ -18,6 +18,7 @@ RMMV.Types.PluginBase = function() {
 	plugin.dateCreated = null;
 	plugin.name = null;
 	plugin.description = null;
+	plugin.tags = [];
 	
 	plugin.refreshObject = function() {
 		return RMMV.PluginBase.Web.getBasePlugin(this.id);
@@ -40,6 +41,7 @@ RMMV.PluginBase.create = function(oplugin) {
 	plugin.dateCreated = oplugin.dateCreated;
 	plugin.name = oplugin.name;
 	plugin.description = oplugin.description;
+	plugin.tags = oplugin.tags;
 	
 	return plugin;
 };
@@ -53,6 +55,7 @@ RMMV.PluginBase.createArray = function(oplugins) {
 		plugin.dateCreated = oplugin.dateCreated;
 		plugin.name = oplugin.name;
 		plugin.description = oplugin.description;
+		plugin.tags = oplugin.tags;
 		plugins.push(plugin);
 	}
 	
@@ -60,7 +63,7 @@ RMMV.PluginBase.createArray = function(oplugins) {
 };
 
 RMMV.PluginBase.Web.createPluginBase = function(plugin) {
-	var saved = RMMV.Types.PluginBase();
+	var saved = null;
 	$.ajax({
 		type: "POST",
 		accept: "application/json",
@@ -69,7 +72,7 @@ RMMV.PluginBase.Web.createPluginBase = function(plugin) {
 		data: JSON.stringify(plugin),
 		dataType: "json",
 		headers: {
-			"Authorization": RMMV.Web.authString
+			"Authorization": "Bearer " + RMMV.Web.authString
 		},
 		success: function(data) {
 			saved = RMMV.PluginBase.create(data);
@@ -93,7 +96,7 @@ RMMV.PluginBase.Web.getPluginBase = function(id) {
 	});
 	
 	return ret;
-}
+};
 
 RMMV.PluginBase.Web.getPluginBases = function() {
 	var ret = null;
@@ -108,7 +111,7 @@ RMMV.PluginBase.Web.getPluginBases = function() {
 	});
 	
 	return ret;
-}
+};
 
 RMMV.PluginBase.Web.getVersions = function(id) {
 	var ret = null;
@@ -123,7 +126,7 @@ RMMV.PluginBase.Web.getVersions = function(id) {
 	});
 	
 	return ret;
-}
+};
 
 RMMV.PluginBase.Web.addVersion = function(id, version) {
 	var plugin = null;
@@ -135,7 +138,7 @@ RMMV.PluginBase.Web.addVersion = function(id, version) {
 		data: JSON.stringify(version),
 		dataType: "json",
 		headers: {
-			"Authorization": RMMV.Web.authString
+			"Authorization": "Bearer " + RMMV.Web.authString
 		},
 		success: function(data) {
 			plugin = RMMV.Plugin.create(data);
@@ -283,7 +286,7 @@ RMMV.Plugin.Web.addDependencies = function(id, dependencies) {
 		data: JSON.stringify(dependencies),
 		dataType: "json",
 		headers: {
-			"Authorization": RMMV.Web.authString
+			"Authorization": "Bearer " + RMMV.Web.authString
 		},
 		success: function(data) {
 			plugin = RMMV.Plugin.create(data);
@@ -330,6 +333,71 @@ RMMV.User.Web.getRoles = function(user) {
 	return roles;
 };
 
+RMMV.User.Web.createUser = function(user) {
+	var newUser = null;
+	$.ajax({
+		type: "POST",
+		accept: "application/json",
+		contentType: "application/json",
+		url: RMMV.Web.baseUrl + "/v1/user/",
+		dataType: "json",
+		data: JSON.stringify(user),
+		headers: {
+			"Authorization": "Bearer " + RMMV.Web.authString
+		},
+		success: function(data) {
+			newUser = data;
+		},
+		async: false
+	});
+	return newUser;
+};
+
+RMMV.User.Web.addRoles = function(user, roles) {
+	var newUser = null;
+	
+	$.ajax({
+		type: "POST",
+		accept: "application/json",
+		contentType: "application/json",
+		url: RMMV.Web.baseUrl + "/v1/user/" + user.username + "/role",
+		dataType: "json",
+		data: JSON.stringify(roles),
+		headers: {
+			"Authorization": "Bearer " + RMMV.Web.authString
+		},
+		success: function(data) {
+			newUser = data;
+		},
+		async: false
+	});
+	
+	return newUser;
+};
+
+RMMV.User.Web.changePassword = function(username, newPassword) {
+	var success = false;
+	$.ajax({
+		type: "PUT",
+		accept: "application/json",
+		contentType: "application/json",
+		url: RMMV.Web.baseUrl + "/v1/user/" + username,
+		dataType: "json",
+		data: JSON.stringify({
+			password: newPassword
+		}),
+		headers: {
+			"Authorization": "Bearer " + RMMV.Web.authString
+		},
+		success: function(data) {
+			success = true;
+		},
+		async: false
+	});
+	
+	return success;
+};
+
 RMMV.Web.authenticate = function(username, password) {
 	var authentication = {username: username, password: password};
 	var token = null;
@@ -343,7 +411,7 @@ RMMV.Web.authenticate = function(username, password) {
 		dataType: "json",
 		success: function(data) {
 			token = data;
-			RMMV.Web.authString = "Bearer " + token.token;
+			RMMV.Web.authString = token.token;
 		},
 		async: false
 	});
@@ -358,11 +426,8 @@ RMMV.Web.reauthenticate = function(token) {
 		type: "GET",
 		accept: "application/json",
 		contentType: "application/json",
-		url: RMMV.Web.baseUrl + "/v1/token/" + token.token,
+		url: RMMV.Web.baseUrl + "/v1/token/" + encodeURI(token.token),
 		dataType: "json",
-		headers: {
-			"Authorization": RMMV.Web.authString
-		},
 		success: function(data) {
 			ret = data;
 			RMMV.Web.authString = ret.token;
@@ -371,7 +436,7 @@ RMMV.Web.reauthenticate = function(token) {
 	});
 	
 	return ret;
-}
+};
 
 RMMV.Web.deauthenticate = function(token) {
 	var ret = null;
@@ -383,7 +448,7 @@ RMMV.Web.deauthenticate = function(token) {
 		url: RMMV.Web.baseUrl + "/v1/token/" + token.token,
 		dataType: "json",
 		headers: {
-			"Authorization": RMMV.Web.authString
+			"Authorization": "Bearer " + RMMV.Web.authString
 		},
 		success: function(data) {
 			ret = data;
