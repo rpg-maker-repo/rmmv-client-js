@@ -1,0 +1,29 @@
+{
+  "name": "rmmv-client-js",
+  "version": "1.0.0",
+  "description": "JavaScript library to consume RPG Maker Assets Repository API.",
+  "main": "rmmv-client.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rpg-maker-repo/rmmv-client-js.git"
+  },
+  "keywords": [
+    "rpg",
+    "maker",
+    "assets",
+    "repository",
+    "api",
+    "wrapper"
+  ],
+  "authors": [
+    "Filipe Oliveira <contato@fmoliveira.com.br>",
+    "Michael Main <deusprogrammer@gmail.com>"
+  ],
+  "bugs": {
+    "url": "https://github.com/rpg-maker-repo/rmmv-client-js/issues"
+  },
+  "homepage": "https://github.com/rpg-maker-repo/rmmv-client-js#readme"
+}
